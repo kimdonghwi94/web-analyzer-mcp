@@ -16,6 +16,10 @@ class Settings(BaseModel):
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-super-secret-key-change-this-in-production")
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 30
+    
+    # API Key 설정
+    API_KEYS: List[str] = ["sk-Tby3rrjF196gbP8sM6S3TjJ9vwSiU7uTQ0XNHdnlyc8"]
+    API_KEY_HEADER: str = "sk-Tby3rrjF196gbP8sM6S3TjJ9vwSiU7uTQ0XNHdnlyc8"
 
     # Redis 설정
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")

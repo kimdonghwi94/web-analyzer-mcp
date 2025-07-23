@@ -146,17 +146,46 @@ class RPC(BaseModel):
 
 
 # ────────── 2. 도구 레지스트리 ──────────
-TOOLS: dict[str, callable] = {}
-
-
-def mcp_tool(fn):
-    TOOLS[fn.__name__] = fn
-    return fn
-
-
-@mcp_tool
-async def echo(text: str) -> str:
-    return text
+# TOOLS: dict[str, callable] = {}
+#
+#
+# def mcp_tool(fn):
+#     TOOLS[fn.__name__] = fn
+#     return fn
+#
+#
+# @mcp_tool
+# async def echo(text: str) -> str:
+#     """단순 에코 도구 - 입력된 텍스트를 그대로 반환합니다"""
+#     return text
+#
+#
+# @mcp_tool
+# async def web_search(query: str, max_results: int = 5) -> str:
+#     """웹 검색 도구 - 제공된 쿼리로 웹 검색을 수행합니다"""
+#     logger.info(f"웹 검색 실행: {query}, 최대 결과 수: {max_results}")
+#
+#     try:
+#         # 여기서는 실제 검색 대신 예시 결과 반환
+#         # 실제 구현에서는 외부 검색 API를 호출해야 함
+#         results = [
+#             {
+#                 "title": f"검색 결과 {i+1}: {query}",
+#                 "url": f"https://example.com/result-{i+1}",
+#                 "snippet": f"{query}에 관한 검색 결과 {i+1}의 요약 내용입니다."
+#             } for i in range(min(max_results, 10))
+#         ]
+#
+#         # 결과 포매팅
+#         formatted_results = "\n\n".join(
+#             f"## {r['title']}\n{r['url']}\n{r['snippet']}"
+#             for r in results
+#         )
+#
+#         return f"### '{query}'에 대한 검색 결과:\n\n{formatted_results}"
+#     except Exception as e:
+#         logger.error(f"웹 검색 오류: {str(e)}")
+#         return f"검색 중 오류가 발생했습니다: {str(e)}"
 
 
 # ────────── 3. 메인 핸들러 ──────────
@@ -189,7 +218,6 @@ async def echo(text: str) -> str:
 #         case _:
 #             return JSONResponse({"jsonrpc":"2.0","id":rpc.id,
 #                                  "error":{"code":-32601,"message":"method not found"}})
-
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -3,20 +3,21 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import HTTPException, status, Depends, Header
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials
 from app.core.config import settings
 from app.core.redis import redis_manager
 import uuid
 import logging
+import secrets
 
 logger = logging.getLogger(__name__)
 
 # 비밀번호 해싱
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# JWT 토큰 추출
-security = HTTPBearer(auto_error=False)
+# API Key 인증
+api_key_header = APIKeyHeader(name=settings.API_KEY_HEADER, auto_error=False)
 
 
 class SecurityManager:
@@ -121,48 +122,57 @@ class SecurityManager:
         result = await redis_manager.get(f"blacklist:{jti}")
         return result is not None
 
+    def validate_api_key(self, api_key: str) -> bool:
+        """API 키 유효성 검증"""
+        if not settings.API_KEYS:
+            return False
+        return api_key in settings.API_KEYS
+
 
 # 전역 보안 매니저 인스턴스
 security_manager = SecurityManager()
 
 
 async def get_current_user(
-        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+        api_key: Optional[str] = Depends(api_key_header)
 ) -> Dict[str, Any]:
-    """현재 사용자 정보 가져오기 (의존성 주입용)"""
+    """현재 사용자 정보 가져오기 (의존성 주입용) - API Key 인증 방식"""
 
-    if not credentials:
+    # API Key 인증 처리
+    if not api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header missing",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail="API key missing",
+            headers={"WWW-Authenticate": f"{settings.API_KEY_HEADER}"},
         )
 
-    # Bearer 토큰에서 실제 토큰 추출
-    token = credentials.credentials
+    if security_manager.validate_api_key(api_key):
+        # API Key가 유효한 경우 시스템 사용자로 처리
+        return {
+            "user_id": "api_key_user",
+            "username": "api_key_user",
+            "email": "api@system.local",
+            "auth_type": "api_key",
+            "api_key": api_key
+        }
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key",
+            headers={"WWW-Authenticate": f"{settings.API_KEY_HEADER}"},
+        )
 
-    # 토큰 검증
-    payload = await security_manager.verify_token(token)
-
-    # 사용자 정보 반환
-    user_info = {
-        "user_id": payload.get("sub"),
-        "username": payload.get("username"),
-        "email": payload.get("email"),
-        "jti": payload.get("jti")
-    }
-
-    return user_info
+    # JWT 토큰 인증 기능은 제거됨
 
 
 async def get_optional_user(
-        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+        api_key: Optional[str] = Depends(api_key_header)
 ) -> Optional[Dict[str, Any]]:
-    """선택적 사용자 정보 (토큰이 없어도 됨)"""
-    if not credentials:
+    """선택적 사용자 정보 (API Key가 없어도 됨)"""
+    if not api_key:
         return None
 
     try:
-        return await get_current_user(credentials)
+        return await get_current_user(api_key)
     except HTTPException:
         return None

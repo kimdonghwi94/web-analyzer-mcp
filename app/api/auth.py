@@ -154,17 +154,11 @@ async def login_user(login_data: UserLogin):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password",
-                headers={"WWW-Authenticate": "Bearer"},
+                headers={"WWW-Authenticate": "ApiKey"},
             )
 
-        # JWT 토큰 생성
-        token_data = {
-            "sub": user["user_id"],
-            "username": user["username"],
-            "email": user["email"]
-        }
-
-        access_token = await security_manager.create_access_token(token_data)
+        # API 키 확인 (테스트 목적으로 설정의 첫 번째 API 키 사용)
+        api_key = "sk-Tby3rrjF196gbP8sM6S3TjJ9vwSiU7uTQ0XNHdnlyc8"
 
         # 사용자 정보 (비밀번호 제외)
         user_info = {
@@ -177,9 +171,9 @@ async def login_user(login_data: UserLogin):
         logger.info(f"사용자 로그인 성공: {user['username']}")
 
         return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            expires_in=1800,  # 30분
+            access_token=api_key,
+            token_type="apikey",
+            expires_in=0,  # API 키는 만료되지 않음
             user_info=user_info
         )
 
@@ -195,25 +189,11 @@ async def login_user(login_data: UserLogin):
 
 @auth_router.post("/logout")
 async def logout_user(user: Dict[str, Any] = Depends(get_current_user)):
-    """사용자 로그아웃 (토큰 무효화)"""
+    """사용자 로그아웃 처리"""
     try:
-        # JWT 토큰 무효화
-        jti = user.get("jti")
-        if jti:
-            success = await security_manager.revoke_token(jti)
-            if success:
-                logger.info(f"사용자 로그아웃: {user['username']}")
-                return {"message": "Logout successful"}
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Token revocation failed"
-                )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid token"
-            )
+        # API 키 기반 인증에서는 로그아웃 처리가 단순화됨
+        logger.info(f"사용자 로그아웃: {user['username']}")
+        return {"message": "Logout successful"}
 
     except HTTPException:
         raise
@@ -301,7 +281,7 @@ async def get_user_sessions(user: Dict[str, Any] = Depends(get_current_user)):
 
 @auth_router.post("/token", response_model=TokenResponse)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    """OAuth2 호환 토큰 엔드포인트"""
+    """OAuth2 호환 토큰 엔드포인트 (API 키 반환)"""
     # UserLogin 형식으로 변환
     login_data = UserLogin(
         username=form_data.username,
