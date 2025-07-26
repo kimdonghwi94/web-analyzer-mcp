@@ -2,6 +2,10 @@
 
 고성능 웹 분석을 위한 엔터프라이즈급 MCP (Model Context Protocol) 서버입니다. FastMCP와 FastAPI를 기반으로 구축되었으며, 비동기 작업 처리, 캐싱, 모니터링 등 프로덕션 환경에 적합한 기능들을 제공합니다.
 
+<a href="https://glama.ai/mcp/servers/@kimdonghwi94/web-analyzer-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@kimdonghwi94/web-analyzer-mcp/badge" alt="WebAnalyzer MCP server" />
+</a>
+
 ## ✨ 주요 기능
 
 ### 🔍 웹 분석 도구
