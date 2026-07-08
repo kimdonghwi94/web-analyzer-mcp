@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/kimdonghwi94-web-analyzer-mcp-badge.png)](https://mseep.ai/app/kimdonghwi94-web-analyzer-mcp)
+
 # 🔍 Web Analyzer MCP
 
 <a href="https://glama.ai/mcp/servers/@kimdonghwi94/web-analyzer-mcp">
